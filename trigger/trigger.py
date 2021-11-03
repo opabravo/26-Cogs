@@ -125,9 +125,8 @@ class Trigger:
             r_list = self.get_n_trigger_responses(trigger, truncate=100)
             if current_list is None:
                 current_list = await self.bot.say(r_list + quit_msg)
-            else:
-                if r_list != current_list.content:
-                    await self.bot.edit_message(current_list, r_list + quit_msg)
+            elif r_list != current_list.content:
+                await self.bot.edit_message(current_list, r_list + quit_msg)
             msg = await self.bot.wait_for_message(author=author, timeout=15)
             if msg is None:
                 await self.bot.say("Nothing else to remove I guess.")
@@ -250,8 +249,7 @@ class Trigger:
         trigger = self.get_trigger_by_name(trigger_name)
         if not await self.settings_check(trigger, author):
             return
-        if seconds < 1:
-            seconds = 1
+        seconds = max(seconds, 1)
         trigger.cooldown = seconds
         self.save_triggers()
         await self.bot.say("Cooldown set to {} seconds.".format(seconds))
@@ -465,13 +463,11 @@ class Trigger:
     def get_n_trigger_responses(self, trigger, *, truncate=2000):
         msg = ""
         responses = trigger.responses
-        i = 0
-        for r in responses:
+        for i, r in enumerate(responses):
             if len(r) > truncate:
                 r = r[:truncate] + "..."
             r = r.replace("`", "\\`").replace("*", "\\*").replace("_", "\\_")
             msg += "{}. {}\n".format(i, r)
-            i += 1
         if msg != "":
             return box(msg, lang="py")
         else:
@@ -482,10 +478,7 @@ class Trigger:
             prefixes = self.bot.command_prefix(self.bot, msg)
         else:
             prefixes = self.bot.command_prefix
-        for p in prefixes:
-            if msg.content.startswith(p):
-                return True
-        return False
+        return any(msg.content.startswith(p) for p in prefixes)
 
     def elaborate_response(self, trigger, r):
         settings = self.bot.settings
@@ -584,9 +577,8 @@ class TriggerObj:
             return False
 
         channels = self.channels.get(msg.server.id, [])
-        if channels:
-            if msg.channel.id not in channels:
-                return False
+        if channels and msg.channel.id not in channels:
+            return False
 
         content = msg.content
         triggered_by = self.triggered_by
@@ -598,21 +590,19 @@ class TriggerObj:
             triggered_by = triggered_by.lower()
             content = content.lower()
 
-        if not self.regex:
-            if triggered_by not in content:
-                return False
-        else:
+        if self.regex:
             found = re.search(triggered_by, content)
             if not found:
                 return False
 
+        elif triggered_by not in content:
+            return False
         timestamp = datetime.datetime.now()
         passed = (timestamp - self.last_triggered).seconds
-        if passed > self.cooldown:
-            self.last_triggered = timestamp
-            return True
-        else:
+        if passed <= self.cooldown:
             return False
+        self.last_triggered = timestamp
+        return True
 
     def payload(self):
         if self.responses:

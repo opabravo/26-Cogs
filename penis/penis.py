@@ -21,7 +21,6 @@ class Penis:
             return
 
         dongs = {}
-        msg = ""
         state = random.getstate()
 
         for user in users:
@@ -31,8 +30,10 @@ class Penis:
         random.setstate(state)
         dongs = sorted(dongs.items(), key=lambda x: x[1])
 
-        for user, dong in dongs:
-            msg += "**{}'s size:**\n{}\n".format(user.display_name, dong)
+        msg = "".join(
+            "**{}'s size:**\n{}\n".format(user.display_name, dong)
+            for user, dong in dongs
+        )
 
         for page in pagify(msg):
             await self.bot.say(page)

@@ -17,15 +17,15 @@ class Insult:
         """Insult the user"""
 
         msg = ' '
-        if user != None:
-            if user.id == self.bot.user.id:
-                user = ctx.message.author
-                msg = " How original. No one else had thought of trying to get the bot to insult itself. I applaud your creativity. Yawn. Perhaps this is why you don't have friends. You don't add anything new to any conversation. You are more of a bot than me, predictable answers, and absolutely dull to have an actual conversation with."
-                await self.bot.say(user.mention + msg)
-            else:
-                await self.bot.say(user.mention + msg + randchoice(self.insults))
-        else:
+        if user is None:
             await self.bot.say(ctx.message.author.mention + msg + randchoice(self.insults))
+
+        elif user.id == self.bot.user.id:
+            user = ctx.message.author
+            msg = " How original. No one else had thought of trying to get the bot to insult itself. I applaud your creativity. Yawn. Perhaps this is why you don't have friends. You don't add anything new to any conversation. You are more of a bot than me, predictable answers, and absolutely dull to have an actual conversation with."
+            await self.bot.say(user.mention + msg)
+        else:
+            await self.bot.say(user.mention + msg + randchoice(self.insults))
 
 
 def setup(bot):
