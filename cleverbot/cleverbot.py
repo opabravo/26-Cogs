@@ -86,8 +86,7 @@ class Cleverbot():
         await self.bot.say("Credentials set.")
 
     async def get_response(self, author, text):
-        payload = {}
-        payload["key"] = self.get_credentials()
+        payload = {'key': self.get_credentials()}
         payload["cs"] = self.instances.get(author.id, "")
         payload["input"] = text
         session = aiohttp.ClientSession()
@@ -107,9 +106,8 @@ class Cleverbot():
         return data["output"]
 
     def get_credentials(self):
-        if "cleverbot_key" not in self.settings:
-            if "key" in self.settings:
-                raise OutdatedCredentials() # old cleverbot.io credentials
+        if "cleverbot_key" not in self.settings and "key" in self.settings:
+            raise OutdatedCredentials() # old cleverbot.io credentials
         try:
             return self.settings["cleverbot_key"]
         except KeyError:
@@ -173,8 +171,8 @@ def check_folders():
 
 def check_files():
     f = "data/cleverbot/settings.json"
-    data = {"TOGGLE" : True}
     if not dataIO.is_valid_json(f):
+        data = {"TOGGLE" : True}
         dataIO.save_json(f, data)
 
 

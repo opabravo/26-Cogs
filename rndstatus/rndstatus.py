@@ -57,24 +57,30 @@ class RandomStatus:
         await self.bot.say("Interval set to {}".format(str(seconds)))
 
     async def switch_status(self, message):
-        if not message.channel.is_private:
-            current_game = str(message.server.me.game)
-            current_status = message.server.me.status
+        if message.channel.is_private:
+            return
+        current_game = str(message.server.me.game)
+        current_status = message.server.me.status
 
-            if self.last_change == None: #first run
-                self.last_change = int(time.perf_counter())
-                if len(self.statuses) > 0 and (current_game in self.statuses or current_game == "None"):
-                    new_game = self.random_status(message)
-                    await self.bot.change_presence(game=discord.Game(name=new_game), status=current_status)
+        if self.last_change is None: #first run
+            self.last_change = int(time.perf_counter())
+            if len(self.statuses) > 0 and (current_game in self.statuses or current_game == "None"):
+                new_game = self.random_status(message)
+                await self.bot.change_presence(game=discord.Game(name=new_game), status=current_status)
 
-            if message.author.id != self.bot.user.id:
-                if abs(self.last_change - int(time.perf_counter())) >= self.settings["DELAY"]:
-                    self.last_change = int(time.perf_counter())
-                    new_game = self.random_status(message)
-                    if new_game != None:
-                        if current_game != new_game:
-                            if current_game in self.statuses or current_game == "None": #Prevents rndstatus from overwriting song's titles or
-                                await self.bot.change_presence(game=discord.Game(name=new_game), status=current_status) #custom statuses set with !set status
+        if (
+            message.author.id != self.bot.user.id
+            and abs(self.last_change - int(time.perf_counter()))
+            >= self.settings["DELAY"]
+        ):
+            self.last_change = int(time.perf_counter())
+            new_game = self.random_status(message)
+            if (
+                new_game != None
+                and current_game != new_game
+                and (current_game in self.statuses or current_game == "None")
+            ): #Prevents rndstatus from overwriting song's titles or
+                await self.bot.change_presence(game=discord.Game(name=new_game), status=current_status) #custom statuses set with !set status
 
     def random_status(self, msg):
         current = str(msg.server.me.game)
@@ -94,17 +100,17 @@ def check_folders():
         os.makedirs("data/rndstatus")
 
 def check_files():
-    settings = {"DELAY" : 300}
-    default = ["her Turn()", "Tomb Raider II", "Transistor", "NEO Scavenger", "Python", "with your heart."]
-
     f = "data/rndstatus/settings.json"
     if not fileIO(f, "check"):
         print("Creating empty settings.json...")
+        settings = {"DELAY" : 300}
         fileIO(f, "save", settings)
 
     f = "data/rndstatus/statuses.json"
     if not fileIO(f, "check"):
         print("Creating empty statuses.json...")
+        default = ["her Turn()", "Tomb Raider II", "Transistor", "NEO Scavenger", "Python", "with your heart."]
+
         fileIO(f, "save", default)
 
 def setup(bot):

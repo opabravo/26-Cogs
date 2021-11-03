@@ -27,7 +27,7 @@ class RemindMe:
         if time_unit.endswith("s"):
             time_unit = time_unit[:-1]
             s = "s"
-        if not time_unit in self.units:
+        if time_unit not in self.units:
             await self.bot.say("Invalid time unit. Choose minutes/hours/days/weeks/month")
             return
         if quantity < 1:
@@ -47,12 +47,11 @@ class RemindMe:
     async def forgetme(self, ctx):
         """Removes all your upcoming notifications"""
         author = ctx.message.author
-        to_remove = []
-        for reminder in self.reminders:
-            if reminder["ID"] == author.id:
-                to_remove.append(reminder)
+        to_remove = [
+            reminder for reminder in self.reminders if reminder["ID"] == author.id
+        ]
 
-        if not to_remove == []:
+        if to_remove != []:
             for reminder in to_remove:
                 self.reminders.remove(reminder)
             fileIO("data/remindme/reminders.json", "save", self.reminders)
